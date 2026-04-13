@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { FileText, Clock, CheckCircle, AlertCircle, UploadCloud, ChevronLeft, Calendar } from 'lucide-react';
 
-const mockAssignments = [
-  { id: 1, title: 'Build a React Dashboard', course: 'Advanced React Patterns', instructor: 'Jishnu', status: 'In Progress', deadline: 'Today, 11:59 PM', urgency: 'critical', xp: 50 },
-  { id: 2, title: 'UX Research Case Study', course: 'UI/UX Masterclass', instructor: 'Sarah Jenkins', status: 'Not Started', deadline: 'Tomorrow, 5:00 PM', urgency: 'near', xp: 75 },
-  { id: 3, title: 'Three.js Initial Setup', course: 'Three.js Fundamentals', instructor: 'David Kim', status: 'Submitted', deadline: 'Last Friday', urgency: 'safe', xp: 20 },
-  { id: 4, title: 'Javascript Closures Lab', course: 'JavaScript Deep Dive', instructor: 'Jishnu', status: 'Graded', deadline: 'Oct 15', urgency: 'safe', xp: 100 }
-];
+const mockAssignments = [];
 
 export default function Assignments() {
   const [activeTab, setActiveTab] = useState('active');
@@ -161,34 +156,44 @@ export default function Assignments() {
 
       {/* Grid List View */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1, overflowY: 'auto' }}>
-        {mockAssignments.map(assignment => (
-          <div 
-            key={assignment.id} 
-            className="card" 
-            onClick={() => setSelectedAssignment(assignment)}
-            style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '24px', cursor: 'pointer', transition: 'border 0.2s', borderLeft: `4px solid ${getUrgencyColor(assignment.urgency)}`, ':hover': { border: '1px solid var(--primary-color)' } }}
-          >
-            <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', color: 'var(--text-main)' }}>
-              <FileText size={24} />
+        {mockAssignments.length === 0 ? (
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px', textAlign: 'center' }}>
+            <div style={{ padding: '24px', background: 'var(--bg-secondary)', borderRadius: '50%', marginBottom: '20px' }}>
+              <Calendar size={48} color="var(--border-color)" />
             </div>
-            
-            <div style={{ flex: 1 }}>
-              <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0 0 4px 0', color: 'var(--text-main)' }}>{assignment.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{assignment.course} • Instructor: {assignment.instructor}</p>
-            </div>
-
-            <div style={{ width: '150px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: getUrgencyColor(assignment.urgency), fontWeight: 600, marginBottom: '6px' }}>
-                <Clock size={14} /> {assignment.deadline}
-              </div>
-              {getStatusBadge(assignment.status)}
-            </div>
-
-            <div style={{ width: '80px', textAlign: 'right' }}>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#d97706', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>+{assignment.xp} XP</span>
-            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: 'var(--text-main)', margin: '0 0 8px 0' }}>No Assignments Posted</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', margin: 0, maxWidth: '300px' }}>You're currently completely caught up on all tasks. Check back later!</p>
           </div>
-        ))}
+        ) : (
+          mockAssignments.map(assignment => (
+            <div 
+              key={assignment.id} 
+              className="card" 
+              onClick={() => setSelectedAssignment(assignment)}
+              style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: '24px', cursor: 'pointer', transition: 'border 0.2s', borderLeft: `4px solid ${getUrgencyColor(assignment.urgency)}`, ':hover': { border: '1px solid var(--primary-color)' } }}
+            >
+              <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', color: 'var(--text-main)' }}>
+                <FileText size={24} />
+              </div>
+              
+              <div style={{ flex: 1 }}>
+                <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0 0 4px 0', color: 'var(--text-main)' }}>{assignment.title}</h3>
+                <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-muted)' }}>{assignment.course} • Instructor: {assignment.instructor}</p>
+              </div>
+
+              <div style={{ width: '150px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', color: getUrgencyColor(assignment.urgency), fontWeight: 600, marginBottom: '6px' }}>
+                  <Clock size={14} /> {assignment.deadline}
+                </div>
+                {getStatusBadge(assignment.status)}
+              </div>
+
+              <div style={{ width: '80px', textAlign: 'right' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#d97706', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px' }}>+{assignment.xp} XP</span>
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );

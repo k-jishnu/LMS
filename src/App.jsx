@@ -15,6 +15,7 @@ import Downloads from './pages/Downloads';
 import Documents from './pages/Documents';
 import Questions from './pages/Questions';
 import Webinars from './pages/Webinars';
+import CoursePlayer from './pages/CoursePlayer';
 import ProfileSettings from './pages/ProfileSettings';
 import Payments from './pages/Payments';
 import Support from './pages/Support';
@@ -45,7 +46,7 @@ function App() {
 
               {/* Learning */}
               <Route path="/courses" element={<MyCourses />} />
-              <Route path="/player" element={<Placeholder title="active video player sessions" />} />
+              <Route path="/player" element={<CoursePlayer />} />
               <Route path="/assignments" element={<Assignments />} />
               <Route path="/quizzes" element={<Quizzes />} />
 
