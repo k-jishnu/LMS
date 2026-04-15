@@ -19,6 +19,7 @@ import CoursePlayer from './pages/CoursePlayer';
 import ProfileSettings from './pages/ProfileSettings';
 import Payments from './pages/Payments';
 import Support from './pages/Support';
+import Upload from './pages/Upload';
 import './index.css';
 
 // Generic Placeholder for the 15 sections
@@ -48,7 +49,6 @@ function App() {
               <Route path="/courses" element={<MyCourses />} />
               <Route path="/player" element={<CoursePlayer />} />
               <Route path="/assignments" element={<Assignments />} />
-              <Route path="/quizzes" element={<Quizzes />} />
 
               {/* Performance */}
               <Route path="/progress" element={<Progress />} />
@@ -58,7 +58,9 @@ function App() {
 
               {/* Resources */}
               <Route path="/downloads" element={<Downloads />} />
+              <Route path="/upload" element={<Upload />} />
               <Route path="/documents" element={<Documents />} />
+              <Route path="/quizzes" element={<Quizzes />} />
               <Route path="/profile" element={<ProfileSettings />} />
               <Route path="/payments" element={<Payments />} />
               <Route path="/support" element={<Support />} />

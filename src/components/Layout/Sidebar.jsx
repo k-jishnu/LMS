@@ -3,7 +3,7 @@ import {
   ChevronDown, ChevronUp, LayoutDashboard, Calendar, Bell, 
   BookOpen, PlaySquare, FileText, CheckSquare, 
   TrendingUp, Award, MessageSquare, Star, 
-  Download, User, CreditCard, HelpCircle, Store, MoreVertical 
+  Download, User, CreditCard, HelpCircle, Store, MoreVertical, Upload 
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -56,11 +56,6 @@ export default function Sidebar() {
               <NavLink to="/assignments" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
                   <FileText size={18} /> Assignments
-                </span>
-              </NavLink>
-              <NavLink to="/quizzes" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
-                  <CheckSquare size={18} /> Quizzes & Exams
                 </span>
               </NavLink>
             </div>
@@ -118,6 +113,12 @@ export default function Sidebar() {
                   <Download size={18} /> Downloads
                 </span>
               </NavLink>
+
+              <NavLink to="/upload" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
+                  <Upload size={18} /> Upload
+                </span>
+              </NavLink>
             </div>
           )}
         </div>
@@ -143,11 +144,6 @@ export default function Sidebar() {
                   <Calendar size={18} /> Calendar
                 </span>
               </NavLink>
-              <NavLink to="/notifications" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
-                  <Bell size={18} /> Notifications
-                </span>
-              </NavLink>
             </div>
           )}
         </div>
@@ -168,6 +164,11 @@ export default function Sidebar() {
                   <User size={18} /> Profile
                 </span>
               </NavLink>
+              <NavLink to="/notifications" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
+                  <Bell size={18} /> Notifications
+                </span>
+              </NavLink>
               <NavLink to="/payments" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: '-24px' }}>
                   <CreditCard size={18} /> Payments
@@ -186,22 +187,7 @@ export default function Sidebar() {
 
       {/* Bottom Actions */}
       <div style={{ padding: '20px' }}>
-        <button style={{ 
-          width: '100%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '10px', 
-          padding: '12px', 
-          background: '#fffbf0', 
-          color: '#d97706', 
-          border: 'none', 
-          borderRadius: '8px', 
-          fontWeight: 500, 
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}>
-          <Store size={18} /> Visit Store
-        </button>
+
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { HelpCircle, Clock, Award, ChevronLeft, Target, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { HelpCircle, Clock, Award, ChevronLeft, Target, AlertTriangle, CheckCircle, XCircle, Zap, Star } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 
 export default function Quizzes() {
@@ -53,6 +54,12 @@ export default function Quizzes() {
 
   function handleSelectOption(questionId, optionId) {
     if (showResults) return;
+    
+    const currentQ = quizData.find(q => q.id === questionId);
+    if (!currentQ) return;
+
+    const selectedOption = currentQ.options.find(o => o.id === optionId);
+    
     setSelectedAnswers(prev => ({ ...prev, [questionId]: optionId }));
   }
 
@@ -100,7 +107,8 @@ export default function Quizzes() {
         <div style={{ flex: 1, display: 'flex', overflow: 'hidden' }}>
            
            {/* Question Rendering Space */}
-           <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto' }}>
+           <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', position: 'relative' }}>
+
               <div style={{ maxWidth: '800px', margin: '0 auto' }}>
                 
                 {isLoadingQuiz ? (
@@ -108,77 +116,122 @@ export default function Quizzes() {
                 ) : quizData.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No questions found for this quiz.</div>
                 ) : showResults ? (
-                  <div className="card" style={{ padding: '40px', textAlign: 'center', marginBottom: '30px' }}>
-                     <h2 style={{ fontSize: '2rem', marginBottom: '10px', color: 'var(--text-main)' }}>Quiz Completed!</h2>
-                     <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)' }}>You scored <strong style={{ color: 'var(--primary-color)' }}>{score}</strong> out of {quizData.length}</p>
+                  <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="card" style={{ padding: '40px', textAlign: 'center', marginBottom: '30px' }}
+                  >
+                     <h2 style={{ fontSize: '2.5rem', marginBottom: '10px', color: 'var(--text-main)', fontWeight: 800 }}>Quiz Completed!</h2>
+                     <p style={{ fontSize: '1.4rem', color: 'var(--text-muted)' }}>You scored <strong style={{ color: 'var(--primary-color)' }}>{score}</strong> out of {quizData.length}</p>
                      <div style={{ marginTop: '30px', fontSize: '1rem', color: 'var(--text-main)' }}>Select a question block on the right to review your answers.</div>
-                  </div>
+                  </motion.div>
                 ) : null}
 
-                {(currentQ) && (
-                  <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-                      <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>Question {currentQuestion} of {activeQuiz.questions_count}</h3>
-                      {!showResults && <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}><AlertTriangle size={14}/> Auto-saved</span>}
-                    </div>
-
-                    <div className="card" style={{ padding: '40px', marginBottom: '30px' }}>
-                      <p style={{ fontSize: '1.2rem', fontWeight: 500, lineHeight: 1.6, margin: '0 0 30px 0', color: 'var(--text-main)' }}>
-                        {currentQ.question}
-                      </p>
-                      
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {currentQ.options.map((opt) => {
-                          const isSelected = selectedAnswers[currentQ.id] === opt.id;
-                          let bgColor = isSelected ? 'var(--primary-light)' : 'white';
-                          let borderColor = isSelected ? 'var(--primary-color)' : 'var(--border-color)';
-                          
-                          if (showResults) {
-                            if (opt.is_correct) {
-                               bgColor = '#dcfce7'; borderColor = '#10b981';
-                            } else if (isSelected && !opt.is_correct) {
-                               bgColor = '#fee2e2'; borderColor = '#ef4444';
-                            } else {
-                               bgColor = 'white'; borderColor = 'var(--border-color)';
-                            }
-                          }
-
-                          return (
-                            <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', border: `1px solid ${borderColor}`, borderRadius: '8px', cursor: showResults ? 'default' : 'pointer', transition: 'background 0.2s', background: bgColor }}>
-                              <input 
-                                type="radio" 
-                                name={`q-${currentQ.id}`} 
-                                checked={isSelected}
-                                onChange={() => handleSelectOption(currentQ.id, opt.id)}
-                                disabled={showResults}
-                                style={{ width: '18px', height: '18px', accentColor: showResults ? (opt.is_correct ? '#10b981' : '#ef4444') : 'var(--primary-color)' }} 
-                              />
-                              <span style={{ fontSize: '1rem', color: 'var(--text-main)' }}>{opt.option_text}</span>
-                              {showResults && opt.is_correct && <CheckCircle size={20} color="#10b981" style={{ marginLeft: 'auto' }} />}
-                              {showResults && isSelected && !opt.is_correct && <XCircle size={20} color="#ef4444" style={{ marginLeft: 'auto' }} />}
-                            </label>
-                          )
-                        })}
+                <AnimatePresence mode="wait">
+                  {(currentQ && !showResults) && (
+                    <motion.div
+                      key={currentQuestion}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -20 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', alignItems: 'center' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.1rem', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>Question {currentQuestion} of {activeQuiz.questions_count}</h3>
+                        </div>
+                        <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--bg-secondary)', padding: '4px 12px', borderRadius: '20px' }}><Zap size={14} color="#f59e0b" fill="#f59e0b"/> High Precision Mode</span>
                       </div>
-                    </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <button 
-                        className="btn-outline" 
-                        style={{ padding: '12px 24px' }} 
-                        onClick={() => setCurrentQuestion(q => Math.max(q-1, 1))}
-                        disabled={currentQuestion === 1}
-                      >Previous</button>
-                      
-                      <button 
-                        className="btn-primary" 
-                        style={{ padding: '12px 24px' }} 
-                        onClick={() => setCurrentQuestion(q => Math.min(q+1, activeQuiz.questions_count))}
-                        disabled={currentQuestion === activeQuiz.questions_count}
-                      >{showResults ? 'Next' : 'Save & Next'}</button>
-                    </div>
-                  </>
-                )}
+                      <div className="card" style={{ padding: '40px', marginBottom: '30px', borderRadius: '24px', border: '1px solid rgba(0,0,0,0.05)', boxShadow: '0 20px 40px -10px rgba(0,0,0,0.1)' }}>
+                        <p style={{ fontSize: '1.4rem', fontWeight: 600, lineHeight: 1.4, margin: '0 0 40px 0', color: 'var(--text-main)' }}>
+                          {currentQ.question}
+                        </p>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                          {currentQ.options.map((opt, idx) => {
+                            const isSelected = selectedAnswers[currentQ.id] === opt.id;
+                            let bgColor = isSelected ? 'var(--primary-light)' : 'white';
+                            let borderColor = isSelected ? 'var(--primary-color)' : 'var(--border-color)';
+                            
+                            if (showResults) {
+                              if (opt.is_correct) {
+                                 bgColor = '#dcfce7'; borderColor = '#10b981';
+                              } else if (isSelected && !opt.is_correct) {
+                                 bgColor = '#fee2e2'; borderColor = '#ef4444';
+                              } else {
+                                 bgColor = 'white'; borderColor = 'var(--border-color)';
+                              }
+                            }
+
+                            return (
+                              <motion.label 
+                                key={opt.id}
+                                whileHover={{ scale: showResults ? 1 : 1.01 }}
+                                whileTap={{ scale: showResults ? 1 : 0.99 }}
+                                style={{ 
+                                  display: 'flex', 
+                                  alignItems: 'center', 
+                                  gap: '20px', 
+                                  padding: '20px 24px', 
+                                  border: `2px solid ${borderColor}`, 
+                                  borderRadius: '16px', 
+                                  cursor: showResults ? 'default' : 'pointer', 
+                                  transition: 'all 0.2s', 
+                                  background: bgColor,
+                                  boxShadow: isSelected ? '0 10px 15px -3px rgba(86, 59, 186, 0.1)' : 'none'
+                                }}
+                              >
+                                <div style={{ 
+                                  width: '32px', 
+                                  height: '32px', 
+                                  borderRadius: '50%', 
+                                  border: `2px solid ${isSelected ? 'var(--primary-color)' : 'var(--border-color)'}`,
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '0.9rem',
+                                  fontWeight: 700,
+                                  color: isSelected ? 'var(--primary-color)' : 'var(--text-muted)',
+                                  background: isSelected ? 'white' : 'transparent'
+                                }}>
+                                  {String.fromCharCode(65 + idx)}
+                                </div>
+                                <input 
+                                  type="radio" 
+                                  name={`q-${currentQ.id}`} 
+                                  checked={isSelected}
+                                  onChange={() => handleSelectOption(currentQ.id, opt.id)}
+                                  disabled={showResults}
+                                  style={{ display: 'none' }} 
+                                />
+                                <span style={{ fontSize: '1.1rem', fontWeight: 500, color: 'var(--text-main)' }}>{opt.option_text}</span>
+                                {showResults && opt.is_correct && <CheckCircle size={24} color="#10b981" style={{ marginLeft: 'auto' }} />}
+                                {showResults && isSelected && !opt.is_correct && <XCircle size={24} color="#ef4444" style={{ marginLeft: 'auto' }} />}
+                              </motion.label>
+                            )
+                          })}
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <button 
+                          className="btn-outline" 
+                          style={{ padding: '14px 28px', borderRadius: '12px', fontSize: '1rem' }} 
+                          onClick={() => setCurrentQuestion(q => Math.max(q-1, 1))}
+                          disabled={currentQuestion === 1}
+                        >Previous</button>
+                        
+                        <button 
+                          className="btn-primary" 
+                          style={{ padding: '14px 32px', borderRadius: '12px', fontSize: '1rem', boxShadow: '0 10px 15px -3px rgba(86, 59, 186, 0.4)' }} 
+                          onClick={() => setCurrentQuestion(q => Math.min(q+1, activeQuiz.questions_count))}
+                          disabled={currentQuestion === activeQuiz.questions_count}
+                        >{showResults ? 'Next' : 'Save & Next'}</button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
            </div>
 
@@ -254,24 +307,56 @@ export default function Quizzes() {
          <div style={{ color: 'var(--text-muted)' }}>No quizzes found in the database.</div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
-          {quizzes.map(quiz => (
-            <div key={quiz.id} className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column' }}>
-               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                 <div style={{ background: 'var(--bg-secondary)', padding: '12px', borderRadius: '8px', color: 'var(--text-main)' }}>
-                   <HelpCircle size={24} />
+           {quizzes.map((quiz, idx) => (
+            <motion.div 
+              key={quiz.id} 
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.1 }}
+              className="quiz-card" 
+              style={{ padding: '32px', boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.05)' }}
+            >
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                 <div style={{ background: 'var(--primary-light)', padding: '16px', borderRadius: '16px', color: 'var(--primary-color)' }}>
+                   <Zap size={28} fill="var(--primary-color)" />
                  </div>
-                 <span style={{ fontSize: '0.75rem', fontWeight: 700, padding: '4px 10px', borderRadius: '12px', background: `#10b98115`, color: '#10b981', textTransform: 'uppercase' }}>Quiz</span>
+                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+                   <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '4px 12px', borderRadius: '20px', background: `#10b98115`, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Verified</span>
+                   <div style={{ display: 'flex', gap: '2px' }}>
+                     {[1,2,3,4,5].map(i => <Star key={i} size={12} fill="#f59e0b" color="#f59e0b" />)}
+                   </div>
+                 </div>
                </div>
 
-               <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: '0 0 8px 0', lineHeight: 1.3 }}>{quiz.title}</h3>
+               <h3 style={{ fontSize: '1.3rem', fontWeight: 700, margin: '0 0 12px 0', lineHeight: 1.2, color: 'var(--text-main)' }}>{quiz.title}</h3>
+               <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '24px', lineHeight: 1.5 }}>Master the core concepts of {quiz.title.toLowerCase()} with our database-verified evaluation system.</p>
                
-               <div style={{ display: 'flex', gap: '16px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '24px' }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Clock size={14}/> Unlimited Time</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Target size={14}/> Database Powered</span>
+               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '32px' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: '8px' }}><Clock size={14}/> 45 Mins</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: '8px' }}><Target size={14}/> Pro Grade</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: '8px' }}><Award size={14}/> Certifiable</span>
                </div>
 
-               <button onClick={() => handleStartQuiz(quiz)} className="btn-primary" style={{ marginTop: 'auto', width: '100%', padding: '10px' }}>Start Quiz</button>
-            </div>
+               <button 
+                onClick={() => handleStartQuiz(quiz)} 
+                className="btn-primary" 
+                style={{ 
+                  marginTop: 'auto', 
+                  width: '100%', 
+                  padding: '14px', 
+                  fontSize: '1rem', 
+                  fontWeight: 600, 
+                  borderRadius: '12px',
+                  boxShadow: '0 8px 15px -3px rgba(86, 59, 186, 0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+               >
+                 Start Assessment <Zap size={18} />
+               </button>
+            </motion.div>
           ))}
         </div>
       )}
