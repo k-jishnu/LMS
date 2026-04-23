@@ -176,13 +176,29 @@ export default function CoursePlayer() {
                         <button className="btn-primary" onClick={submitQuiz} style={{ padding: '16px', fontSize: '1.1rem' }}>Submit Evaluation</button>
                       </div>
                     ) : (
-                      <div className="card" style={{ padding: '60px', textAlign: 'center' }}>
-                         <Award size={64} color="var(--primary-color)" style={{ marginBottom: '24px' }} />
-                         <h2 style={{ fontSize: '2rem', marginBottom: '16px' }}>Quiz Completed!</h2>
-                         <p style={{ fontSize: '1.2rem', color: 'var(--text-muted)', marginBottom: '40px' }}>
-                           You scored <strong>{score}</strong> out of {quizQuestions.length}.
+                      <div className="card text-center py-16 px-10 animate-in zoom-in duration-500">
+                         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-green-200">
+                           <Award size={48} />
+                         </div>
+                         <h2 className="text-4xl font-black text-slate-900 mb-4">Course Completed!</h2>
+                         <p className="text-xl text-slate-500 mb-8 max-w-md mx-auto">
+                           Incredible work! You scored <strong className="text-indigo-600">{score}%</strong> and have officially mastered the concepts of this program.
                          </p>
-                         <p style={{ color: 'var(--primary-color)', fontWeight: 600 }}>Click 'Finish' below to claim your certificate.</p>
+                         
+                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                           <button 
+                             onClick={() => navigate('/certificates')}
+                             className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center gap-2"
+                           >
+                              <Award size={24} /> Get My Certificate
+                           </button>
+                           <button 
+                             onClick={() => setIsQuizActive(false)}
+                             className="px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
+                           >
+                              Review Lessons
+                           </button>
+                         </div>
                       </div>
                     )}
                  </div>
@@ -210,7 +226,7 @@ export default function CoursePlayer() {
               
               {(isQuizActive || (lessons.length > 0 && currentIndex === lessons.length - 1 && !isQuizActive)) ? (
                 <button className="btn-primary" onClick={handleNextOrFinish} style={{ background: 'var(--primary-color)', color: 'white', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 30px' }}>
-                   {isQuizActive ? 'Finish' : (currentIndex === lessons.length - 1 ? 'Go to Quiz' : 'Next')} <Check size={18} />
+                   {isQuizActive ? 'Finish' : (currentIndex === lessons.length - 1 ? 'Start Quiz' : 'Next')} <Check size={18} />
                 </button>
               ) : (
                 <button className="btn-primary" onClick={handleNextOrFinish} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

@@ -1,36 +1,58 @@
 import { Play, TrendingUp, Clock, Calendar, CheckCircle, Bell, Award, FastForward, Flag, Book, Download } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function Dashboard() {
+  const [name, setName] = useState("User");
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        const user = data.user;
+        const fullName = user?.user_metadata?.full_name || "User";
+        setName(fullName);
+
+        // Save user in database
+        await supabase.from("users").upsert({
+          id: user.id,
+          email: user.email,
+          name: fullName,
+        });
+      }
+    };
+    fetchUser();
+  }, []);
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Hello';
+    if (hour < 18) return 'Hello';
+    return 'Hello';
   };
 
   return (
     <div style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '30px', background: 'var(--bg-secondary)', minHeight: '100%' }}>
-      
+
       {/* Overview Layer */}
       <section style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ position: 'relative' }}>
             <div style={{ width: '64px', height: '64px', borderRadius: '50%', background: 'linear-gradient(135deg, #f87171, #fca5a5)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'white', fontSize: '1.5rem', fontWeight: 'bold', border: '3px solid white', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-              K
+              {name.charAt(0).toUpperCase()}
             </div>
             <div style={{ position: 'absolute', bottom: '-8px', left: '50%', transform: 'translateX(-50%)', background: 'var(--primary-color)', color: 'white', fontSize: '0.65rem', padding: '2px 8px', borderRadius: '10px', fontWeight: 'bold', whiteSpace: 'nowrap' }}>
               Level 12
             </div>
           </div>
           <div>
-            <h1 style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--text-main)' }}>{getGreeting()}, Jishnu!</h1>
+            <h1 style={{ fontSize: '1.8rem', fontWeight: 700, margin: '0 0 4px 0', color: 'var(--text-main)' }}>{getGreeting()}, {name}!</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <span style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>Global Progress: 42%</span>
               <div style={{ width: '150px', height: '6px', background: 'var(--border-color)', borderRadius: '3px', overflow: 'hidden' }}>
                 <div style={{ width: '42%', height: '100%', background: 'var(--primary-color)' }}></div>
               </div>
               <span style={{ color: '#d97706', fontSize: '0.9rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Award size={14}/> 4,250 XP
+                <Award size={14} /> 4,250 XP
               </span>
             </div>
           </div>
@@ -64,7 +86,7 @@ export default function Dashboard() {
       <div style={{ display: 'grid', gridTemplateColumns: 'recap(auto-fit, minmax(300px, 1fr))', gap: '30px', gridTemplateColumns: '2fr 1fr' }}>
         {/* Left Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
+
           {/* Smart Continue Learning */}
           <div className="card" style={{ position: 'relative', overflow: 'hidden' }}>
             <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: 'var(--primary-color)' }}></div>
@@ -74,7 +96,7 @@ export default function Dashboard() {
                   <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--primary-color)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Jump Back In</span>
                   <h2 style={{ fontSize: '1.3rem', fontWeight: 600, marginTop: '8px', marginBottom: '4px' }}>Advanced JavaScript Concepts</h2>
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '16px' }}>Module 3: Closures in Depth (14:22)</p>
-                  
+
                   <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <button className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px' }}>
                       <Play size={16} fill="currentColor" /> Resume Video
@@ -90,7 +112,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 </div>
-                
+
                 <div style={{ width: '160px', height: '100px', background: '#e5e7eb', borderRadius: '8px', position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                   <Play size={32} color="var(--primary-color)" opacity={0.5} />
                 </div>
@@ -106,7 +128,7 @@ export default function Dashboard() {
               </h2>
               <button style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontSize: '0.9rem', cursor: 'pointer' }}>View Calendar</button>
             </div>
-            
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'center', padding: '12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '8px', cursor: 'pointer' }}>
                 <div style={{ width: '4px', height: '40px', background: '#ef4444', borderRadius: '2px' }}></div>
@@ -130,26 +152,26 @@ export default function Dashboard() {
 
           {/* Announcements Feed */}
           <div className="card" style={{ padding: '24px' }}>
-             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-                <Bell size={18} /> Announcements
-             </h2>
-             <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 600, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '12px' }}>Pinned</span>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Yesterday</span>
-                </div>
-                <h4 style={{ fontSize: '0.95rem', margin: '0 0 8px 0' }}>System Maintenance Weekend</h4>
-                <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                  The platform will be down for 2 hours this Sunday at 2 AM EST for critical server upgrades. Plan your study sessions accordingly!
-                </p>
-             </div>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+              <Bell size={18} /> Announcements
+            </h2>
+            <div style={{ borderBottom: '1px solid var(--border-color)', paddingBottom: '16px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, background: '#e0e7ff', color: '#3730a3', padding: '2px 8px', borderRadius: '12px' }}>Pinned</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Yesterday</span>
+              </div>
+              <h4 style={{ fontSize: '0.95rem', margin: '0 0 8px 0' }}>System Maintenance Weekend</h4>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+                The platform will be down for 2 hours this Sunday at 2 AM EST for critical server upgrades. Plan your study sessions accordingly!
+              </p>
+            </div>
           </div>
 
         </div>
 
         {/* Right Column */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-          
+
           {/* Quick Actions */}
           <div className="card" style={{ padding: '24px' }}>
             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '20px' }}>Quick Actions</h2>
@@ -173,7 +195,7 @@ export default function Dashboard() {
             <h2 style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <TrendingUp size={18} /> Daily Missions
             </h2>
-            
+
             <div style={{ marginBottom: '24px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '8px', fontWeight: 500 }}>
                 <span>Level 12 Explorer</span>

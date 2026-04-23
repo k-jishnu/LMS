@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 import { 
   User, Shield, Settings, Book, Database, Link as LinkIcon, 
   Camera, CheckCircle, Mail, Phone, Lock, Smartphone, Globe, 
@@ -7,6 +8,20 @@ import {
 
 export default function ProfileSettings() {
   const [activeTab, setActiveTab] = useState('account');
+  const [name, setName] = useState('User');
+  const [email, setEmail] = useState('');
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      if (data?.user) {
+        const fullName = data.user?.user_metadata?.full_name || "User";
+        setName(fullName);
+        setEmail(data.user.email);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const tabs = [
     { id: 'account', label: 'Account & Security', icon: <Shield size={18} /> },
@@ -23,7 +38,7 @@ export default function ProfileSettings() {
       <div className="card" style={{ padding: '30px', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '30px' }}>
         <div style={{ position: 'relative' }}>
           <div style={{ width: '100px', height: '100px', borderRadius: '50%', background: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '2.5rem', fontWeight: 'bold' }}>
-            K
+            {name.charAt(0).toUpperCase()}
           </div>
           <button style={{ position: 'absolute', bottom: 0, right: 0, background: 'var(--primary-color)', color: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', border: '2px solid white' }}>
             <Camera size={16} />
@@ -32,12 +47,12 @@ export default function ProfileSettings() {
         
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-            <h1 style={{ fontSize: '1.75rem', margin: 0 }}>K Jishnu</h1>
+            <h1 style={{ fontSize: '1.75rem', margin: 0 }}>{name}</h1>
             <span style={{ background: '#e0f2fe', color: '#0284c7', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '4px' }}>
               <CheckCircle size={12} /> Verified
             </span>
           </div>
-          <p style={{ color: 'var(--text-muted)', margin: '0 0 16px 0' }}>@kjishnu • Aspiring Developer & Lifelong Learner</p>
+          <p style={{ color: 'var(--text-muted)', margin: '0 0 16px 0' }}>{email} • Aspiring Developer & Lifelong Learner</p>
           
           <div style={{ display: 'flex', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)' }}>
@@ -103,7 +118,7 @@ export default function ProfileSettings() {
                   <div style={{ display: 'flex', gap: '12px' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                       <Mail size={18} style={{ position: 'absolute', left: '12px', top: '11px', color: 'var(--text-muted)' }} />
-                      <input type="email" className="input-field" defaultValue="krishna@example.com" style={{ paddingLeft: '40px' }} readOnly />
+                      <input type="email" className="input-field" value={email} style={{ paddingLeft: '40px' }} readOnly />
                     </div>
                     <button className="btn-outline">Update</button>
                   </div>

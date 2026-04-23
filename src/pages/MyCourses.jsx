@@ -23,7 +23,17 @@ export default function MyCourses() {
       if (error) {
         console.error('Error fetching courses from Supabase:', error);
       } else if (data) {
-        setCourses(data);
+        setCourses(data.map(c => {
+          let localProgress = null;
+          if (c.title?.toLowerCase().includes('photosynthesis')) {
+            const scoreStr = localStorage.getItem('quiz_score_photosynthesis');
+            if (scoreStr) localProgress = parseInt(scoreStr, 10);
+          }
+          return {
+            ...c,
+            progress: localProgress !== null ? localProgress : (c.progress || 0)
+          };
+        }));
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -103,9 +113,9 @@ export default function MyCourses() {
             </div>
           ) : (
             courses.map(course => (
-              <div 
-                key={course.id} 
-                className="card" 
+              <div
+                key={course.id}
+                className="card"
                 onClick={() => navigate('/player', { state: { courseId: course.id } })}
                 style={{ display: 'flex', flexDirection: 'column', cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s', ':hover': { transform: 'translateY(-4px)', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' } }}
               >
@@ -144,7 +154,7 @@ export default function MyCourses() {
                       <span style={{ fontWeight: 600 }}>{course.progress || 0}%</span>
                     </div>
                     <div style={{ width: '100%', height: '6px', background: 'var(--bg-secondary)', borderRadius: '3px', overflow: 'hidden', marginBottom: '12px' }}>
-                      <div style={{ width: `${course.progress || 0}%`, height: '100%', background: course.progress === 100 ? '#10b981' : 'var(--primary-color)' }}></div>
+                      <div style={{ width: `${course.progress || 0}%`, height: '100%', background: course.progress >= 60 ? '#10b981' : 'var(--primary-color)' }}></div>
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between' }}>
                       <span>Last accessed:</span>
