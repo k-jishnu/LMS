@@ -104,7 +104,7 @@ const Login = () => {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(); // Safe alternative to .single()
-        
+
         setLoading(false);
 
         if (dbError) {
@@ -302,8 +302,8 @@ const Login = () => {
           </button>
 
           <div style={{ textAlign: 'center', marginTop: '12px' }}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => {
                 setIsOtpMode(!isOtpMode);
                 setError(null);

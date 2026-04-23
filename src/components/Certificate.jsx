@@ -15,18 +15,21 @@ export default function Certificate({ name, course, date, certId }) {
   const [scale, setScale] = useState(1);
 
   useEffect(() => {
-    const handleResize = () => {
-      const screenWidth = window.innerWidth;
-      const screenHeight = window.innerHeight;
-      // Calculate scale to fit within 90% of screen width and 70% of screen height
-      const scaleX = (screenWidth * 0.9) / 1000;
-      const scaleY = (screenHeight * 0.7) / 700;
-      setScale(Math.min(scaleX, scaleY, 1)); // Max scale is 1
+    const calculateScale = () => {
+      // Account for modal padding and UI elements
+      const availableWidth = Math.min(window.innerWidth - 80, 1000); 
+      const availableHeight = window.innerHeight - 250; // Leave space for download button
+      
+      const scaleX = availableWidth / 1000;
+      const scaleY = availableHeight / 700;
+      
+      // Ensure it never scales up beyond 1, and always fits both width and height
+      setScale(Math.min(scaleX, scaleY, 1));
     };
-    
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    calculateScale();
+    window.addEventListener('resize', calculateScale);
+    return () => window.removeEventListener('resize', calculateScale);
   }, []);
 
   const downloadPDF = async () => {
@@ -67,24 +70,28 @@ export default function Certificate({ name, course, date, certId }) {
   };
 
   return (
-    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '30px', borderRadius: '32px' }}>
+    <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: '0', borderRadius: '16px', overflow: 'hidden' }}>
       
-      {/* Scaled wrapper for complete visibility */}
+      {/* Container that strictly measures available width */}
       <div 
         style={{ 
-          width: '100%', 
-          display: 'flex', 
-          justifyContent: 'center', 
-          height: `${700 * scale}px`, // Dynamically reserve height based on scale
-          marginBottom: '20px'
+          width: `${1000 * scale}px`, // Strictly collapse width
+          height: `${700 * scale}px`, // Strictly collapse height 
+          position: 'relative',
+          overflow: 'hidden',
+          backgroundColor: '#e5e7eb', // subtle background for edge detection
+          borderBottom: '1px solid var(--border-color)',
+          margin: '0 auto' // Center within the card
         }}
       >
         <div 
           id="certificate-wrapper"
           style={{ 
+            position: 'absolute',
+            top: 0,
+            left: 0,
             transform: `scale(${scale})`, 
-            transformOrigin: 'top center',
-            transition: 'transform 0.1s'
+            transformOrigin: 'top left',
           }}
         >
           {/* Certificate UI - Exactly 1000x700 for the PDF generator */}
@@ -94,9 +101,12 @@ export default function Certificate({ name, course, date, certId }) {
             position: "relative",
             width: "1000px",
             height: "700px",
+            minWidth: "1000px",
+            minHeight: "700px",
+            maxWidth: "1000px",
+            maxHeight: "700px",
             backgroundColor: "#ffffff",
             flexShrink: 0,
-            boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
           }}
         >
           
@@ -104,7 +114,7 @@ export default function Certificate({ name, course, date, certId }) {
           <img
             src="/certificate-template.png"
             alt="certificate template"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            style={{ width: "100%", height: "100%", objectFit: "fill", display: "block" }}
           />
 
           {/* DYNAMIC CONTENT OVERLAYS */}
@@ -195,24 +205,24 @@ export default function Certificate({ name, course, date, certId }) {
       </div>
 
       {/* Download Action Area */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '24px' }}>
         <button 
           onClick={downloadPDF}
           className="btn-primary hover-bounce"
           style={{
-            padding: '16px 40px',
-            fontSize: '1.2rem',
-            borderRadius: '16px',
+            padding: '14px 32px',
+            fontSize: '1.1rem',
+            borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            boxShadow: '0 10px 20px rgba(86, 59, 186, 0.2)'
+            boxShadow: '0 8px 16px rgba(86, 59, 186, 0.2)'
           }}
         >
-          <Download size={24} />
-          Download Official Certificate
+          <Download size={20} />
+          Download PDF
         </button>
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 500 }}>Valid for professional portfolios and LinkedIn</p>
+        <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500, margin: 0 }}>Official Verified Certificate</p>
       </div>
     </div>
   );

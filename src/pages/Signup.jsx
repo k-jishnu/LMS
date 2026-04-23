@@ -105,7 +105,7 @@ const Signup = () => {
           .order('created_at', { ascending: false })
           .limit(1)
           .maybeSingle(); // Safe alternative to .single()
-        
+
         setLoading(false);
 
         if (dbError) {
