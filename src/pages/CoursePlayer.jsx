@@ -144,57 +144,101 @@ export default function CoursePlayer() {
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: isQuizActive ? '40px' : '0' }}>
                {isQuizActive ? (
                  <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '30px', color: 'var(--primary-color)' }}>
-                       <Target size={32} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '40px', padding: '20px', background: 'var(--primary-light)', borderRadius: '16px', border: '1px solid rgba(86, 59, 186, 0.1)' }}>
+                       <div style={{ width: '64px', height: '64px', background: 'white', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary-color)', boxShadow: '0 8px 16px rgba(86, 59, 186, 0.1)' }}>
+                         <Target size={32} />
+                       </div>
                        <div>
-                         <h1 style={{ fontSize: '1.8rem', margin: 0 }}>React Basics Quiz</h1>
-                         <p style={{ margin: 0, color: 'var(--text-muted)' }}>Final Evaluation Stage</p>
+                         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, margin: 0, color: '#1e293b' }}>React Basics Quiz</h1>
+                         <p style={{ margin: '4px 0 0 0', color: 'var(--text-muted)', fontWeight: 500 }}>Final Evaluation Stage</p>
                        </div>
                     </div>
 
                     {!quizSubmitted ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
                         {quizQuestions.map((q, idx) => (
-                          <div key={q.id} className="card" style={{ padding: '30px' }}>
-                             <p style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '20px' }}>{idx + 1}. {q.question}</p>
-                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {(q.options || []).map(opt => (
-                                  <label key={opt.id} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 18px', border: `1px solid ${selectedAnswers[q.id] === opt.id ? 'var(--primary-color)' : 'var(--border-color)'}`, borderRadius: '8px', cursor: 'pointer', background: selectedAnswers[q.id] === opt.id ? 'var(--primary-light)' : 'transparent' }}>
-                                     <input 
-                                       type="radio" 
-                                       name={`q-${q.id}`} 
-                                       checked={selectedAnswers[q.id] === opt.id}
-                                       onChange={() => setSelectedAnswers(prev => ({...prev, [q.id]: opt.id}))}
-                                       style={{ accentColor: 'var(--primary-color)' }}
-                                     />
-                                     <span>{opt.option_text}</span>
-                                  </label>
-                                ))}
+                          <div key={q.id} className="premium-card" style={{ padding: '40px' }}>
+                             <div style={{ display: 'flex', gap: '20px', marginBottom: '32px' }}>
+                                <div style={{ background: 'var(--primary-light)', color: 'var(--primary-color)', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}>
+                                  {idx + 1}
+                                </div>
+                                <p style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0, color: '#1e293b', lineHeight: '1.5' }}>{q.question}</p>
+                             </div>
+                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+                                {(q.options || []).map(opt => {
+                                  const isSelected = selectedAnswers[q.id] === opt.id;
+                                  return (
+                                    <label 
+                                      key={opt.id} 
+                                      style={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center', 
+                                        gap: '16px', 
+                                        padding: '20px', 
+                                        border: `2px solid ${isSelected ? 'var(--primary-color)' : 'var(--border-color)'}`, 
+                                        borderRadius: '16px', 
+                                        cursor: 'pointer', 
+                                        background: isSelected ? 'var(--primary-light)' : 'white',
+                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        boxShadow: isSelected ? '0 10px 15px -3px rgba(86, 59, 186, 0.1)' : 'none'
+                                      }}
+                                    >
+                                       <div style={{ 
+                                         width: '24px', 
+                                         height: '24px', 
+                                         borderRadius: '50%', 
+                                         border: `2px solid ${isSelected ? 'var(--primary-color)' : '#cbd5e1'}`, 
+                                         display: 'flex', 
+                                         alignItems: 'center', 
+                                         justifyContent: 'center',
+                                         background: 'white'
+                                       }}>
+                                          {isSelected && <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary-color)' }} />}
+                                       </div>
+                                       <input 
+                                         type="radio" 
+                                         name={`q-${q.id}`} 
+                                         checked={isSelected}
+                                         onChange={() => setSelectedAnswers(prev => ({...prev, [q.id]: opt.id}))}
+                                         style={{ display: 'none' }}
+                                       />
+                                       <span style={{ fontSize: '1.05rem', fontWeight: 500, color: isSelected ? 'var(--primary-color)' : 'var(--text-main)' }}>{opt.option_text}</span>
+                                    </label>
+                                  );
+                                })}
                              </div>
                           </div>
                         ))}
-                        <button className="btn-primary" onClick={submitQuiz} style={{ padding: '16px', fontSize: '1.1rem' }}>Submit Evaluation</button>
+                        <button 
+                          className="btn-primary" 
+                          onClick={submitQuiz} 
+                          style={{ padding: '20px', fontSize: '1.25rem', borderRadius: '20px', marginTop: '20px', boxShadow: '0 20px 40px rgba(86, 59, 186, 0.2)' }}
+                        >
+                          Submit Final Evaluation
+                        </button>
                       </div>
                     ) : (
-                      <div className="card text-center py-16 px-10 animate-in zoom-in duration-500">
-                         <div className="w-24 h-24 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-green-200">
-                           <Award size={48} />
+                      <div className="premium-card" style={{ textAlign: 'center', maxWidth: '650px', margin: '40px auto' }}>
+                         <div style={{ width: '96px', height: '96px', background: '#f0fdf4', color: '#10b981', borderRadius: '50%', flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.2)' }}>
+                           <Award size={56} />
                          </div>
-                         <h2 className="text-4xl font-black text-slate-900 mb-4">Course Completed!</h2>
-                         <p className="text-xl text-slate-500 mb-8 max-w-md mx-auto">
-                           Incredible work! You scored <strong className="text-indigo-600">{score}%</strong> and have officially mastered the concepts of this program.
+                         <h2 style={{ fontSize: '2.5rem', fontWeight: 900, color: '#0f172a', marginBottom: '16px', letterSpacing: '-0.02em' }}>Course Completed!</h2>
+                         <p style={{ fontSize: '1.125rem', color: '#64748b', marginBottom: '40px', maxWidth: '480px', margin: '0 auto 40px', lineHeight: '1.6' }}>
+                           Incredible work! You scored <strong style={{ color: 'var(--primary-color)', fontSize: '1.25rem' }}>{score}%</strong> and have officially mastered the concepts of this program.
                          </p>
                          
-                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                         <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
                            <button 
                              onClick={() => navigate('/certificates')}
-                             className="px-8 py-4 bg-indigo-600 text-white rounded-2xl font-bold text-lg hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-200 flex items-center gap-2"
+                             className="btn-primary"
+                             style={{ padding: '16px 32px', fontSize: '1.1rem', borderRadius: '16px' }}
                            >
                               <Award size={24} /> Get My Certificate
                            </button>
                            <button 
                              onClick={() => setIsQuizActive(false)}
-                             className="px-8 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold text-lg hover:bg-slate-50 transition-all"
+                             className="btn-outline"
+                             style={{ padding: '16px 32px', fontSize: '1.1rem', borderRadius: '16px' }}
                            >
                               Review Lessons
                            </button>

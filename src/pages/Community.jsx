@@ -15,7 +15,19 @@ export default function Community() {
   // 1. Fetch current authenticated user
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
-      setCurrentUser(user);
+      if (user) {
+        setCurrentUser(user);
+      } else {
+        // Fallback for custom OTP session
+        const customEmail = localStorage.getItem('custom_session_email');
+        const customName = localStorage.getItem('custom_session_name');
+        if (customEmail) {
+          setCurrentUser({
+            id: customEmail,
+            user_metadata: { full_name: customName }
+          });
+        }
+      }
     });
   }, []);
 
@@ -39,7 +51,7 @@ export default function Community() {
     fetchMessages(activeCourse.id);
 
     const channel = supabase
-      .channel('course-chat')
+      .channel('chat')
       .on(
         'postgres_changes',
         {
@@ -48,8 +60,21 @@ export default function Community() {
           table: 'messages',
           filter: `course_id=eq.${activeCourse.id}`
         },
-        (payload) => {
-          setMessages((prev) => [...prev, payload.new]);
+        async (payload) => {
+          // Re-fetch to get profile name (Realtime payload is raw)
+          const { data } = await supabase
+            .from('messages')
+            .select('*, profiles(name, avatar_url)')
+            .eq('id', payload.new.id)
+            .single();
+            
+          if (data) {
+            setMessages((prev) => {
+              // PREVENT DUPLICATES: Only add if not already in state (from handleSendMessage)
+              if (prev.some(m => m.id === data.id)) return prev;
+              return [...prev, data];
+            });
+          }
         }
       )
       .subscribe();
@@ -62,23 +87,29 @@ export default function Community() {
   async function fetchMessages(courseId) {
     setLoadingMessages(true);
 
-    // Initial fetch from Supabase
+    // Initial fetch from Supabase with join to profiles
     const { data, error } = await supabase
       .from('messages')
-      .select('*, profiles(full_name, avatar_url)')
+      .select(`
+        id,
+        content,
+        created_at,
+        user_id,
+        profiles(
+          name,
+          avatar_url
+        )
+      `)
       .eq('course_id', courseId)
       .order('created_at', { ascending: true });
+      
+    console.log("MESSAGES DATA:", data);
 
     if (error) {
       console.error("Error fetching messages:", error);
     }
-
-    if (data) {
-      setMessages(data);
-    } else {
-      setMessages([]);
-    }
-
+    
+    setMessages(data || []);
     setLoadingMessages(false);
   }
 
@@ -94,14 +125,32 @@ export default function Community() {
     const text = newMessage;
     setNewMessage(''); // Clear input instantly for good UX
 
-    // Insert into Supabase
-    // DO NOT manually push message into state.
-    // Let realtime subscription handle UI update.
-    await supabase.from('messages').insert({
-      course_id: activeCourse.id,
-      user_id: currentUser.id,
-      content: text
-    });
+    // Insert and select with profiles join for instant display
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        course_id: activeCourse.id,
+        user_id: currentUser.id,
+        content: text
+      })
+      .select(`
+        id,
+        content,
+        created_at,
+        user_id,
+        profiles(name, avatar_url)
+      `)
+      .single();
+
+    if (error) {
+      console.error("Send error:", error);
+      return;
+    }
+
+    console.log("Inserted message:", data);
+
+    // 🔥 THIS IS THE MISSING PART: Update state manually for instant feedback
+    setMessages((prev) => [...prev, data]);
   }
 
   // Helper to format time
@@ -112,7 +161,7 @@ export default function Community() {
 
   // Helper to get display name
   const getDisplayName = (msg) => {
-    return msg.profiles?.full_name || 'Anonymous Learner';
+    return msg.profiles?.name || 'Anonymous Learner';
   };
 
   // Helper to check if message is from current user
@@ -214,36 +263,44 @@ export default function Community() {
               <p style={{ margin: 0, maxWidth: '400px' }}>This is the beginning of your course community. Say hi to your peers and instructors.</p>
             </div>
           ) : (
-            messages.map((msg, index) => {
-              const isOwnMessage = currentUser && msg.user_id === currentUser.id;
-              const showHeader = index === 0 || messages[index - 1].user_id !== msg.user_id;
+            messages.map((msg) => {
+              const isOwn = currentUser && msg.user_id === currentUser.id;
 
               return (
-                <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', marginBottom: '8px' }}>
+                <div
+                  key={msg.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: isOwn ? "flex-end" : "flex-start",
+                    marginBottom: "10px"
+                  }}
+                >
+                  <div style={{ maxWidth: "65%" }}>
+                    
+                    {/* USER NAME */}
+                    {!isOwn && (
+                      <p style={{ fontSize: "12px", marginBottom: "2px", color: "#666", paddingLeft: "4px" }}>
+                        {msg.profiles?.name || "Anonymous"}
+                      </p>
+                    )}
 
-                  {showHeader && (
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px', padding: '0 4px', justifyContent: isOwnMessage ? 'flex-end' : 'flex-start' }}>
-                      <span style={{ fontWeight: 600, fontSize: '0.9rem', color: 'var(--text-main)' }}>
-                        {isOwnMessage ? 'You' : getDisplayName(msg)}
-                      </span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        {formatTime(msg.created_at)}
-                      </span>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', justifyContent: isOwnMessage ? 'flex-end' : 'flex-start' }}>
-                    <div style={{
-                      background: isOwnMessage ? '#6C5CE7' : '#E5E7EB',
-                      color: isOwnMessage ? 'white' : 'black',
-                      padding: '10px 14px',
-                      borderRadius: '16px',
-                      maxWidth: '60%',
-                      wordBreak: 'break-word',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                    }}>
+                    {/* MESSAGE BUBBLE */}
+                    <div
+                      style={{
+                        background: isOwn ? "#6C5CE7" : "#E5E7EB",
+                        color: isOwn ? "white" : "black",
+                        padding: "10px 14px",
+                        borderRadius: "16px",
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+                        wordBreak: 'break-word'
+                      }}
+                    >
                       {msg.content}
                     </div>
+                    
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px', textAlign: isOwn ? 'right' : 'left', padding: '0 4px' }}>
+                      {formatTime(msg.created_at)}
+                    </span>
                   </div>
                 </div>
               );

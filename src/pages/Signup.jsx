@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 import { Mail, Lock, User, UserPlus, AlertCircle } from 'lucide-react';
@@ -15,6 +15,26 @@ const Signup = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [countdown, setCountdown] = useState(0); 
+  const [expiryTime, setExpiryTime] = useState(null); // 🚀 Source of truth for timer
+
+  // 🚀 OTP Countdown Logic (Synced with Expiry Time)
+  useEffect(() => {
+    let timer;
+    if (expiryTime) {
+      timer = setInterval(() => {
+        const diff = Math.floor((new Date(expiryTime).getTime() - Date.now()) / 1000);
+        if (diff <= 0) {
+          setCountdown(0);
+          setExpiryTime(null);
+          clearInterval(timer);
+        } else {
+          setCountdown(diff);
+        }
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [expiryTime]);
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -52,17 +72,19 @@ const Signup = () => {
       if (!otpSent) {
         setLoading(true);
         // 🚀 STEP 2: SEND OTP
-        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+        const generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
 
         // store OTP in supabase (VERY IMPORTANT)
-        const { error: dbError } = await supabase.from("otp_codes").upsert(
+        const { data: otpData, error: dbError } = await supabase.from("otp_codes").upsert(
           {
             email: email.toLowerCase(),
-            otp: otpCode,
-            expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString()
+            otp: generatedOtp,
+            expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString() // 5 min
           },
-          { onConflict: "email" }
-        );
+          {
+            onConflict: "email"
+          }
+        ).select().single(); // 🚀 Get server-confirmed data back
 
         if (dbError) {
           setLoading(false);
@@ -72,20 +94,23 @@ const Signup = () => {
 
         try {
           // send email
-          await emailjs.send(
+          const res = await emailjs.send(
             import.meta.env.VITE_EMAILJS_SERVICE_ID,
             import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
             {
               to_email: email,
-              otp: otpCode
+              otp: generatedOtp
             },
             import.meta.env.VITE_EMAILJS_PUBLIC_KEY
           );
 
+          console.log("SUCCESS:", res);
           setOtpSent(true);
+          setExpiryTime(otpData.expires_at); // 🚀 Set source of truth
           setError("OTP sent successfully to your email! Please check.");
         } catch (err) {
-          setError("Failed to send OTP via EmailJS: " + err.text);
+          console.error("FULL ERROR:", err);
+          setError("Failed to send OTP via EmailJS: " + (err.text || err.message || "Unknown error"));
         }
         setLoading(false);
       } else {
@@ -102,43 +127,41 @@ const Signup = () => {
           .from("otp_codes")
           .select("*")
           .eq("email", cleanEmail)
-          .order('created_at', { ascending: false })
+          .order("created_at", { ascending: false })
           .limit(1)
-          .maybeSingle(); // Safe alternative to .single()
+          .single();
 
         setLoading(false);
 
-        if (dbError) {
-          console.error("OTP Verification Error:", dbError);
-          setError("Database error occurred");
-          return;
-        }
-
-        if (!data) {
+        if (dbError || !data) {
           setError("No OTP found for this email");
           return;
         }
 
-        // Add debug logs to help find the issue
-        console.log("--- OTP DEBUG LOGS ---");
-        console.log("Entered OTP:", enteredOtp, typeof enteredOtp);
-        console.log("DB OTP:", data?.otp, typeof data?.otp);
-        console.log("Email:", email);
-        console.log("DB Email:", data?.email);
-        console.log("----------------------");
+        // 🧪 DEBUG (copy paste)
+        console.log("Entered:", enteredOtp);
+        console.log("Stored:", data?.otp);
+        console.log("Now:", Date.now());
+        console.log("Expiry:", new Date(data.expires_at).getTime());
 
-        // Compare string types safely in case DB stores OTP as integer
         if (String(data.otp) !== enteredOtp) {
           setError("Invalid OTP");
           return;
         }
 
-        if (new Date(data.expires_at) < new Date()) {
+        if (Date.now() > new Date(data.expires_at).getTime()) {
           setError("OTP expired");
           return;
         }
 
         setError("Signup successful! Redirecting...");
+
+        // 🔥 When user signs up:
+        await supabase.from("profiles").insert({
+          id: email.toLowerCase(),
+          name: fullName,
+        });
+
         // Create custom session in local storage
         localStorage.setItem('custom_session', 'true');
         localStorage.setItem('custom_session_email', email);
@@ -172,6 +195,14 @@ const Signup = () => {
       if (authError) {
         setError(authError.message);
       } else {
+        // 🔥 When user signs up:
+        if (data.user) {
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            name: fullName,
+          });
+        }
+        
         setError("Signup successful! Check your email.");
         setTimeout(() => navigate('/login'), 2000);
       }
@@ -281,7 +312,14 @@ const Signup = () => {
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
               >
-                <label>One-Time Password (OTP)</label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ margin: 0 }}>One-Time Password (OTP)</label>
+                  {countdown > 0 && (
+                    <span style={{ fontSize: '0.8rem', color: countdown < 60 ? '#ef4444' : 'var(--text-muted)', fontWeight: 600 }}>
+                      Expires in: {Math.floor(countdown / 60)}:{(countdown % 60).toString().padStart(2, '0')}
+                    </span>
+                  )}
+                </div>
                 <div className="input-wrapper">
                   <Lock className="input-icon" size={18} />
                   <input
